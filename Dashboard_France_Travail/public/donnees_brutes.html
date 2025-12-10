@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Données brutes – France Travail</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Styles spécifiques pour la page données brutes / tableau -->
+    <style>
+        /* Conteneur principal du tableau brut */
+        .raw-table-card {
+            background-color: var(--ft-card-bg);
+            border-radius: 0.9rem;
+            border: 1px solid var(--ft-border);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
+            padding: 0.6rem 0.85rem 0.75rem;
+        }
+
+        .raw-table-card-title {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--ft-text-muted);
+            font-weight: 600;
+            margin: 0 0 0.4rem;
+        }
+
+        .raw-table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        /* Tableau harmonisé avec la charte */
+        .ft-data-table {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.85rem;
+        }
+
+        .ft-data-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f9fafb;
+            border-bottom: 1px solid var(--ft-border);
+            padding: 0.55rem 0.75rem;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--ft-text-muted);
+            white-space: nowrap;
+        }
+
+        .ft-data-table tbody td {
+            padding: 0.40rem 0.75rem;
+            border-bottom: 1px solid var(--ft-border);
+            border-right: 1px solid var(--ft-border);
+            color: var(--ft-text-main);
+            white-space: nowrap;
+            background-color: #ffffff;
+        }
+
+        .ft-data-table tbody tr:nth-child(even) td {
+            background-color: #f9fbff;
+        }
+
+        .ft-data-table tbody tr:hover td {
+            background-color: rgba(0, 84, 164, 0.06);
+        }
+
+        .ft-data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ft-data-table tbody td:first-child,
+        .ft-data-table thead th:first-child {
+            border-left: 1px solid var(--ft-border);
+        }
+
+        /* Petit ajustement pagination / texte pour la cohérence visuelle */
+        .raw-pagination {
+            margin-top: 0.75rem;
+        }
+
+        .raw-pagination .btn {
+            border-radius: 999px;
+        }
+
+        .raw-meta-text {
+            font-size: 0.8rem;
+        }
+
+        /* Sur très petits écrans, on compresse un peu le texte */
+        @media (max-width: 576px) {
+            .ft-data-table thead th {
+                font-size: 0.65rem;
+            }
+            .ft-data-table tbody td {
+                font-size: 0.78rem;
+            }
+        }
+    </style>
+</head>
+<body class="login-wrapper">
+
+<nav class="navbar ft-navbar shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="logo-france-travail.png" alt="France Travail" class="ft-logo me-2">
+            <span class="ft-brand-text">France Travail</span>
+            <span class="ft-app-subtitle d-none d-md-inline">Données brutes – accès invité</span>
+        </a>
+        <div class="d-flex">
+            <a href="/" class="btn btn-outline-light btn-sm">Retour à la connexion</a>
+        </div>
+    </div>
+</nav>
+
+<main class="flex-grow-1 d-flex align-items-center justify-content-center py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-11">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h1 class="h4 mb-3">Consultation des données brutes</h1>
+                        <p class="text-muted mb-3">
+                            Vous consultez ici les données brutes utilisées par le tableau de bord,
+                            sans visualisations ni fonctionnalités supplémentaires.
+                        </p>
+
+                        <!-- Infos + taille de page -->
+                        <div class="row align-items-end mb-3">
+                            <div class="col-md-6 small text-muted raw-meta-text">
+                                Nombre total d'enregistrements :
+                                <span id="meta-count">–</span><br>
+                                Nombre après filtrage :
+                                <span id="meta-filtered-count">–</span>
+                            </div>
+                            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                                <label for="page-size" class="small me-1">Lignes par page :</label>
+                                <select id="page-size" class="form-select form-select-sm d-inline-block w-auto">
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                    <option value="200">200</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Filtres -->
+                        <div class="mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body py-2">
+                                    <div class="row g-2" id="filters-row">
+                                        <!-- Filtres insérés en JavaScript -->
+                                    </div>
+                                    <div class="small text-muted mt-1">
+                                        Chaque liste déroulante contient toutes les valeurs possibles de la colonne.
+                                        Par défaut, aucun filtre n'est appliqué.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tableau joliment stylé -->
+                        <div class="raw-table-card">
+                            <div class="raw-table-card-title">
+                                Données brutes – evolution_indicateurs_cles_ac.json
+                            </div>
+                            <div class="raw-table-responsive">
+                                <table class="table table-sm table-hover ft-data-table">
+                                    <thead id="data-header"></thead>
+                                    <tbody id="data-body">
+                                        <tr>
+                                            <td class="text-muted small">
+                                                Chargement des données…
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav class="raw-pagination d-flex justify-content-between align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary" id="prev-page" disabled>
+                                Page précédente
+                            </button>
+                            <div class="small text-muted">
+                                Page <span id="current-page">0</span> / <span id="total-pages">0</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" id="next-page" disabled>
+                                Page suivante
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const metaCount = document.getElementById('meta-count');
+    const metaFilteredCount = document.getElementById('meta-filtered-count');
+    const pageSizeSelect = document.getElementById('page-size');
+    const headerEl = document.getElementById('data-header');
+    const bodyEl = document.getElementById('data-body');
+    const filtersRow = document.getElementById('filters-row');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    const currentPageEl = document.getElementById('current-page');
+    const totalPagesEl = document.getElementById('total-pages');
+
+    let allData = [];
+    let filteredData = [];
+    let columns = [];
+    let distinctValues = {};
+    const filters = {};
+    let currentPage = 1;
+    let pageSize = 25;
+
+    // S'assure que le sélecteur affiche bien 25 par défaut
+    if (pageSizeSelect) {
+        pageSizeSelect.value = '25';
+    }
+
+    function normaliseValue(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        if (typeof value === 'object') {
+            try {
+                return JSON.stringify(value);
+            } catch (e) {
+                return String(value);
+            }
+        }
+        return String(value);
+    }
+
+    function buildHeaderAndFilters() {
+        headerEl.innerHTML = '';
+        filtersRow.innerHTML = '';
+
+        const tr = document.createElement('tr');
+
+        columns.forEach((col) => {
+            // En-tête de colonne
+            const th = document.createElement('th');
+            th.scope = 'col';
+            th.textContent = col;
+            tr.appendChild(th);
+
+            // Filtre associé (liste déroulante)
+            const colDiv = document.createElement('div');
+            colDiv.className = 'col-6 col-md-3 col-xl-2 filter-group';
+
+            const label = document.createElement('label');
+            label.className = 'form-label small mb-1';
+            label.textContent = col.replace(/_/g, ' ');
+
+            const selectId = 'filter-' + col;
+            label.setAttribute('for', selectId);
+
+            const select = document.createElement('select');
+            select.id = selectId;
+            select.className = 'form-select form-select-sm';
+            select.dataset.field = col;
+
+            // Option "Tous" = aucun filtre
+            const optAll = document.createElement('option');
+            optAll.value = '';
+            optAll.textContent = 'Tous';
+            select.appendChild(optAll);
+
+            const valuesSet = distinctValues[col] || new Set();
+            const values = Array.from(valuesSet);
+
+            values.sort((a, b) => a.localeCompare(b, 'fr', { numeric: true, ignorePunctuation: true }));
+
+            values.forEach((val) => {
+                if (val === '') {
+                    return; // ignore valeurs vides
+                }
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+            });
+
+            // Par défaut : aucun filtre
+            select.value = '';
+
+            select.addEventListener('change', () => {
+                const value = select.value;
+                if (value) {
+                    filters[col] = value;
+                } else {
+                    delete filters[col];
+                }
+                applyFilters();
+            });
+
+            colDiv.appendChild(label);
+            colDiv.appendChild(select);
+            filtersRow.appendChild(colDiv);
+        });
+
+        headerEl.appendChild(tr);
+    }
+
+    function renderTable() {
+        bodyEl.innerHTML = '';
+
+        const total = filteredData.length;
+        const totalPages = total === 0 ? 1 : Math.ceil(total / pageSize);
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const slice = filteredData.slice(startIndex, endIndex);
+
+        if (slice.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = columns.length || 1;
+            td.className = 'text-center text-muted small';
+            td.textContent = 'Aucune donnée à afficher.';
+            tr.appendChild(td);
+            bodyEl.appendChild(tr);
+        } else {
+            slice.forEach((row) => {
+                const tr = document.createElement('tr');
+                columns.forEach((col) => {
+                    const td = document.createElement('td');
+                    const value = row[col];
+                    td.textContent = normaliseValue(value);
+                    tr.appendChild(td);
+                });
+                bodyEl.appendChild(tr);
+            });
+        }
+
+        currentPageEl.textContent = total === 0 ? 0 : currentPage;
+        totalPagesEl.textContent = total === 0 ? 0 : totalPages;
+        prevBtn.disabled = currentPage <= 1 || total === 0;
+        nextBtn.disabled = currentPage >= totalPages || total === 0;
+    }
+
+    function applyFilters() {
+        if (!allData.length) {
+            filteredData = [];
+        } else if (!Object.keys(filters).length) {
+            filteredData = allData.slice();
+        } else {
+            filteredData = allData.filter((row) => {
+                return Object.entries(filters).every(([field, value]) => {
+                    const cellValue = normaliseValue(row[field]);
+                    return cellValue === value;
+                });
+            });
+        }
+
+        metaFilteredCount.textContent = filteredData.length.toLocaleString('fr-FR');
+        currentPage = 1;
+        renderTable();
+    }
+
+    // Gestion du changement du nombre de lignes par page
+    pageSizeSelect.addEventListener('change', () => {
+        const newSize = parseInt(pageSizeSelect.value, 10);
+        if (!Number.isNaN(newSize) && newSize > 0) {
+            pageSize = newSize;
+            currentPage = 1;
+            renderTable();
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage -= 1;
+            renderTable();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        const total = filteredData.length;
+        const totalPages = total === 0 ? 1 : Math.ceil(total / pageSize);
+        if (currentPage < totalPages) {
+            currentPage += 1;
+            renderTable();
+        }
+    });
+
+    try {
+        const response = await fetch('evolution_indicateurs_cles_ac.json');
+        if (!response.ok) {
+            throw new Error('Erreur HTTP ' + response.status);
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+            throw new Error('Le fichier JSON ne contient pas une liste de données.');
+        }
+
+        allData = data;
+        filteredData = data.slice();
+        metaCount.textContent = allData.length.toLocaleString('fr-FR');
+        metaFilteredCount.textContent = filteredData.length.toLocaleString('fr-FR');
+
+        // Construction de la liste des colonnes et des valeurs distinctes
+        const colSet = new Set();
+        distinctValues = {};
+
+        allData.forEach((row) => {
+            Object.entries(row).forEach(([key, value]) => {
+                colSet.add(key);
+                const normVal = normaliseValue(value);
+                if (normVal === '') {
+                    return;
+                }
+                if (!distinctValues[key]) {
+                    distinctValues[key] = new Set();
+                }
+                distinctValues[key].add(normVal);
+            });
+        });
+
+        columns = Array.from(colSet);
+
+        // S'assure que chaque colonne a bien un Set associé
+        columns.forEach((col) => {
+            if (!distinctValues[col]) {
+                distinctValues[col] = new Set();
+            }
+        });
+
+        buildHeaderAndFilters();
+        renderTable();
+    } catch (error) {
+        console.error(error);
+        bodyEl.innerHTML = '';
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 1;
+        td.className = 'text-danger';
+        td.textContent = 'Une erreur est survenue lors du chargement des données brutes.';
+        tr.appendChild(td);
+        bodyEl.appendChild(tr);
+    }
+});
+</script>
+
+</body>
+</html>
