@@ -22,21 +22,44 @@
     <div class="login-card">
         <h1 class="mb-1">Connexion</h1>
         <p class="text-muted mb-4 small">
-            Utilisez vos identifiants ou les comptes de démonstration fournis par l'enseignant.
+            Utilisez vos identifiants pour accéder au tableau de bord.
         </p>
 
         <form method="POST" action="/auth">
             <div class="mb-3">
                 <label class="form-label" for="username">Identifiant</label>
-                <input type="text" id="username" name="username" class="form-control" required autocomplete="username">
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    class="form-control"
+                    required
+                    autocomplete="username">
             </div>
 
             <div class="mb-3">
                 <label class="form-label" for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" class="form-control" required autocomplete="current-password">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="form-control"
+                    required
+                    autocomplete="current-password">
             </div>
 
-            <button class="btn btn-ft-primary w-100 mt-2" type="submit">Se connecter</button>
+            <!-- Bouton de login classique -->
+            <button class="btn btn-ft-primary w-100 mt-2" type="submit">
+                Se connecter
+            </button>
+
+            <!-- 👉 Nouveau bloc : bouton invité -->
+            <div class="mt-3 text-center">
+                <span class="text-muted d-block mb-1">ou</span>
+                <a href="donnees_brutes.html" class="btn btn-outline-secondary w-100">
+                    Continuer en tant qu'invité
+                </a>
+            </div>
         </form>
     </div>
 </main>
